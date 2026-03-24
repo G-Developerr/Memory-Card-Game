@@ -16,6 +16,8 @@ let canInteract = false;
 let points = 0;
 let hintUses = 2;
 let legendaryShuffleTimer = null;
+let currentStage = 1;
+let maxUnlockedStage = 1;
 
 const DIFFICULTY_SETTINGS = {
     easy: { pairs: 6, columns: 4, rows: 3, label: "Easy", previewMs: 1400 },
@@ -23,6 +25,19 @@ const DIFFICULTY_SETTINGS = {
     hard: { pairs: 9, columns: 6, rows: 3, label: "Hard", previewMs: 900 },
     legendary: { pairs: 9, columns: 6, rows: 3, label: "Legendary", previewMs: 700 }
 };
+
+const STAGES = [
+    { stage: 1, previewPenalty: 0, hintCount: 2, reward: "S.H.I.E.L.D. Rookie" },
+    { stage: 2, previewPenalty: 80, hintCount: 2, reward: "Arc Reactor Spark" },
+    { stage: 3, previewPenalty: 120, hintCount: 2, reward: "Vibranium Token" },
+    { stage: 4, previewPenalty: 160, hintCount: 2, reward: "Infinity Echo" },
+    { stage: 5, previewPenalty: 200, hintCount: 1, reward: "Asgard Medal" },
+    { stage: 6, previewPenalty: 240, hintCount: 1, reward: "Wakanda Crest" },
+    { stage: 7, previewPenalty: 300, hintCount: 1, reward: "Mystic Sigil" },
+    { stage: 8, previewPenalty: 360, hintCount: 1, reward: "Avenger Elite" },
+    { stage: 9, previewPenalty: 440, hintCount: 1, reward: "Reality Shard" },
+    { stage: 10, previewPenalty: 520, hintCount: 0, reward: "Infinity Champion" }
+];
 
 const gridContainer = document.querySelector(".grid-container");
 const scoreEl = document.querySelector(".score");
@@ -37,11 +52,17 @@ const pauseBtn = document.querySelector(".pause-btn");
 const hintBtn = document.querySelector(".hint-btn");
 const progressBarEl = document.querySelector(".progress-bar");
 const pointsEl = document.querySelector(".points");
+const stageEl = document.querySelector(".stage-label");
+const rewardsCountEl = document.querySelector(".rewards-count");
+const stageModalEl = document.querySelector(".stage-modal");
+const stageSummaryEl = document.querySelector(".stage-summary");
+const rewardSummaryEl = document.querySelector(".reward-summary");
 
 fetch("./data/cards.json")
     .then((res) => res.json())
     .then((data) => {
         fullDeck = data;
+        loadStageProgress();
         startNewGame();
     });
 
@@ -78,20 +99,23 @@ function resetStats(totalPairs) {
     streak = 0;
     canInteract = false;
     points = 0;
-    hintUses = 2;
+    hintUses = getCurrentStageConfig().hintCount;
 
     scoreEl.textContent = "0";
     totalPairsEl.textContent = String(totalPairs);
     movesEl.textContent = "0";
     timerEl.textContent = "00:00";
     difficultyLabelEl.textContent = DIFFICULTY_SETTINGS[currentDifficulty].label;
+    stageEl.textContent = String(currentStage);
     winMessageEl.textContent = "";
     streakEl.textContent = "0";
     pointsEl.textContent = "0";
     progressBarEl.style.width = "0%";
     pauseBtn.textContent = "Pause";
     hintBtn.textContent = `Hint (${hintUses})`;
-    hintBtn.disabled = false;
+    hintBtn.disabled = hintUses === 0;
+    rewardsCountEl.textContent = String(getRewards().length);
+    hideStageModal();
     updateBestScoreDisplay();
 }
 
@@ -257,7 +281,14 @@ function checkGameCompleted() {
         }));
     }
     updateBestScoreDisplay();
+    const reward = grantReward();
+    const hasNext = currentStage < STAGES.length;
     winMessageEl.textContent = `Victory! ${resultText}`;
+    if (hasNext) {
+        showStageModal(resultText, reward);
+    } else {
+        showStageModal(`${resultText} - Final Stage Cleared!`, reward, true);
+    }
     canInteract = false;
 }
 
@@ -268,6 +299,7 @@ function restart() {
 function changeDifficulty(value) {
     if (!DIFFICULTY_SETTINGS[value]) return;
     currentDifficulty = value;
+    loadStageProgress();
     startNewGame();
 }
 
@@ -280,7 +312,8 @@ function updateProgressBar() {
 function runStartPreview() {
     const allCards = [...document.querySelectorAll(".card")];
     allCards.forEach((card) => card.classList.add("flipped"));
-    const previewMs = DIFFICULTY_SETTINGS[currentDifficulty].previewMs ?? 1200;
+    const basePreview = DIFFICULTY_SETTINGS[currentDifficulty].previewMs ?? 1200;
+    const previewMs = Math.max(350, basePreview - getCurrentStageConfig().previewPenalty);
 
     setTimeout(() => {
         allCards.forEach((card) => card.classList.remove("flipped"));
@@ -327,6 +360,76 @@ function useHint() {
 
     points = Math.max(0, points - 30);
     pointsEl.textContent = String(points);
+}
+
+function getCurrentStageConfig() {
+    return STAGES[currentStage - 1];
+}
+
+function getProgressKey() {
+    return `memory_progress_${currentDifficulty}`;
+}
+
+function getRewardsKey() {
+    return `memory_rewards_${currentDifficulty}`;
+}
+
+function loadStageProgress() {
+    const saved = Number(localStorage.getItem(getProgressKey()) || "1");
+    maxUnlockedStage = Math.min(Math.max(saved, 1), STAGES.length);
+    currentStage = maxUnlockedStage;
+}
+
+function getRewards() {
+    const stored = localStorage.getItem(getRewardsKey());
+    if (!stored) return [];
+    try {
+        return JSON.parse(stored);
+    } catch {
+        return [];
+    }
+}
+
+function saveRewards(rewards) {
+    localStorage.setItem(getRewardsKey(), JSON.stringify(rewards));
+    rewardsCountEl.textContent = String(rewards.length);
+}
+
+function grantReward() {
+    const stageInfo = getCurrentStageConfig();
+    const rewards = getRewards();
+    const rewardId = `${currentDifficulty}_stage_${currentStage}`;
+    if (!rewards.some((item) => item.id === rewardId)) {
+        rewards.push({ id: rewardId, label: stageInfo.reward });
+        saveRewards(rewards);
+    }
+    if (currentStage < STAGES.length) {
+        maxUnlockedStage = Math.max(maxUnlockedStage, currentStage + 1);
+        localStorage.setItem(getProgressKey(), String(maxUnlockedStage));
+    }
+    return stageInfo.reward;
+}
+
+function showStageModal(resultText, reward, isFinal = false) {
+    stageSummaryEl.textContent = `Stage ${currentStage}: ${resultText}`;
+    rewardSummaryEl.textContent = `Reward unlocked: ${reward}`;
+    const button = stageModalEl.querySelector("button");
+    button.textContent = isFinal ? "Play Again" : "Next Stage";
+    stageModalEl.classList.remove("hidden");
+}
+
+function hideStageModal() {
+    stageModalEl.classList.add("hidden");
+}
+
+function nextStage() {
+    if (currentStage < STAGES.length) {
+        currentStage += 1;
+    } else {
+        currentStage = 1;
+    }
+    hideStageModal();
+    startNewGame();
 }
 
 function shuffleUnmatchedCards() {

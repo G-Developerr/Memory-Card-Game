@@ -3,3 +3,11 @@ staticSites:
     branch: main
     buildCommand: ""
     staticPublishPath: .
+
+services:
+  - type: web
+    name: memory-card-game-web
+    env: node
+    branch: main
+    buildCommand: "npm install"
+    startCommand: "npm start"
