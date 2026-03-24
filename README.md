@@ -2,13 +2,17 @@
 
 A modern Marvel-themed memory game built with vanilla web technologies.
 
+Live on Render: https://memory-card-game-whs.onrender.com
+
 ## Features
 
 - Marvel-style animated background and 3D card effects
+- Animated 3D MARVEL logo background
 - Multiple difficulty levels: Easy, Medium, Hard, Legendary
 - 10-stage campaign progression for each difficulty
 - Stage rewards and persistent reward collection
 - Timer, moves, streak, points, and progress tracking
+- Lives system, score multipliers, and Hero Mode power-up
 - Legendary mode chaos mechanic (periodic shuffle)
 - Hint system with limited uses
 - Best-score persistence with `localStorage`

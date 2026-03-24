@@ -18,6 +18,11 @@ let hintUses = 2;
 let legendaryShuffleTimer = null;
 let currentStage = 1;
 let maxUnlockedStage = 1;
+let lives = 3;
+let multiplier = 1;
+let heroMode = false;
+let heroModeTimer = null;
+let isGameOverState = false;
 
 const DIFFICULTY_SETTINGS = {
     easy: { pairs: 6, columns: 4, rows: 3, label: "Easy", previewMs: 1400 },
@@ -57,6 +62,9 @@ const rewardsCountEl = document.querySelector(".rewards-count");
 const stageModalEl = document.querySelector(".stage-modal");
 const stageSummaryEl = document.querySelector(".stage-summary");
 const rewardSummaryEl = document.querySelector(".reward-summary");
+const livesEl = document.querySelector(".lives");
+const multiplierEl = document.querySelector(".multiplier");
+const heroBtn = document.querySelector(".hero-btn");
 
 fetch("./data/cards.json")
     .then((res) => res.json())
@@ -100,6 +108,11 @@ function resetStats(totalPairs) {
     canInteract = false;
     points = 0;
     hintUses = getCurrentStageConfig().hintCount;
+    lives = 3;
+    multiplier = 1;
+    heroMode = false;
+    stopHeroMode();
+    isGameOverState = false;
 
     scoreEl.textContent = "0";
     totalPairsEl.textContent = String(totalPairs);
@@ -110,10 +123,14 @@ function resetStats(totalPairs) {
     winMessageEl.textContent = "";
     streakEl.textContent = "0";
     pointsEl.textContent = "0";
+    livesEl.textContent = String(lives);
+    multiplierEl.textContent = "x1";
     progressBarEl.style.width = "0%";
     pauseBtn.textContent = "Pause";
     hintBtn.textContent = `Hint (${hintUses})`;
     hintBtn.disabled = hintUses === 0;
+    heroBtn.disabled = false;
+    heroBtn.textContent = "Hero Mode";
     rewardsCountEl.textContent = String(getRewards().length);
     hideStageModal();
     updateBestScoreDisplay();
@@ -188,11 +205,13 @@ function disableCards() {
     score += 1;
     matchedPairs += 1;
     streak += 1;
-    points += 100 + Math.max(0, streak - 1) * 25;
+    if (streak >= 3) multiplier = Math.min(5, multiplier + 1);
+    points += (100 + Math.max(0, streak - 1) * 25) * multiplier;
 
     scoreEl.textContent = String(score);
     streakEl.textContent = String(streak);
     pointsEl.textContent = String(points);
+    multiplierEl.textContent = `x${multiplier}`;
     updateProgressBar();
     resetBoard();
     checkGameCompleted();
@@ -203,7 +222,15 @@ function unflipCards() {
         firstCard.classList.remove("flipped");
         secondCard.classList.remove("flipped");
         streak = 0;
+        multiplier = 1;
+        lives -= 1;
         streakEl.textContent = "0";
+        multiplierEl.textContent = "x1";
+        livesEl.textContent = String(Math.max(0, lives));
+        if (lives <= 0) {
+            handleGameOver();
+            return;
+        }
         if (currentDifficulty === "legendary") {
             points = Math.max(0, points - 15);
             pointsEl.textContent = String(points);
@@ -260,7 +287,10 @@ function checkGameCompleted() {
 
     stopTimer();
     stopLegendaryMode();
-    const resultText = `${moves} moves - ${formatTime(secondsElapsed)} - ${points} pts`;
+    stopHeroMode();
+    heroMode = false;
+    const stars = getStarsForStage();
+    const resultText = `${moves} moves - ${formatTime(secondsElapsed)} - ${points} pts - ${stars} stars`;
     const bestKey = getBestScoreKey();
     const previousBest = localStorage.getItem(bestKey);
     const isBetterResult = (() => {
@@ -281,7 +311,7 @@ function checkGameCompleted() {
         }));
     }
     updateBestScoreDisplay();
-    const reward = grantReward();
+    const reward = grantReward(stars);
     const hasNext = currentStage < STAGES.length;
     winMessageEl.textContent = `Victory! ${resultText}`;
     if (hasNext) {
@@ -362,6 +392,21 @@ function useHint() {
     pointsEl.textContent = String(points);
 }
 
+function getStageTargets() {
+    const pairBase = DIFFICULTY_SETTINGS[currentDifficulty].pairs;
+    const targetMoves = pairBase + 4 + currentStage;
+    const targetPoints = 450 + currentStage * 120 + pairBase * 50;
+    return { targetMoves, targetPoints };
+}
+
+function getStarsForStage() {
+    const { targetMoves, targetPoints } = getStageTargets();
+    let stars = 1;
+    if (moves <= targetMoves) stars += 1;
+    if (points >= targetPoints) stars += 1;
+    return stars;
+}
+
 function getCurrentStageConfig() {
     return STAGES[currentStage - 1];
 }
@@ -395,12 +440,12 @@ function saveRewards(rewards) {
     rewardsCountEl.textContent = String(rewards.length);
 }
 
-function grantReward() {
+function grantReward(stars) {
     const stageInfo = getCurrentStageConfig();
     const rewards = getRewards();
     const rewardId = `${currentDifficulty}_stage_${currentStage}`;
     if (!rewards.some((item) => item.id === rewardId)) {
-        rewards.push({ id: rewardId, label: stageInfo.reward });
+        rewards.push({ id: rewardId, label: `${stageInfo.reward} (${stars} stars)` });
         saveRewards(rewards);
     }
     if (currentStage < STAGES.length) {
@@ -412,7 +457,8 @@ function grantReward() {
 
 function showStageModal(resultText, reward, isFinal = false) {
     stageSummaryEl.textContent = `Stage ${currentStage}: ${resultText}`;
-    rewardSummaryEl.textContent = `Reward unlocked: ${reward}`;
+    const targets = getStageTargets();
+    rewardSummaryEl.textContent = `Reward: ${reward} | Targets: <= ${targets.targetMoves} moves & >= ${targets.targetPoints} pts`;
     const button = stageModalEl.querySelector("button");
     button.textContent = isFinal ? "Play Again" : "Next Stage";
     stageModalEl.classList.remove("hidden");
@@ -423,6 +469,12 @@ function hideStageModal() {
 }
 
 function nextStage() {
+    if (isGameOverState) {
+        isGameOverState = false;
+        hideStageModal();
+        startNewGame();
+        return;
+    }
     if (currentStage < STAGES.length) {
         currentStage += 1;
     } else {
@@ -430,6 +482,50 @@ function nextStage() {
     }
     hideStageModal();
     startNewGame();
+}
+
+function handleGameOver() {
+    stopTimer();
+    stopLegendaryMode();
+    canInteract = false;
+    winMessageEl.textContent = "Game Over! No lives left. Restart or use easier strategy.";
+    isGameOverState = true;
+    showStageModal("Game Over", "No reward unlocked");
+    const button = stageModalEl.querySelector("button");
+    button.textContent = "Retry Stage";
+}
+
+function activateHeroMode() {
+    if (heroMode || !canInteract) return;
+    if (points < 400) {
+        winMessageEl.textContent = "Need 400 points to activate Hero Mode.";
+        return;
+    }
+    points -= 400;
+    pointsEl.textContent = String(points);
+    heroMode = true;
+    multiplier = 2;
+    multiplierEl.textContent = "x2";
+    heroBtn.disabled = true;
+    heroBtn.textContent = "Hero Mode ON";
+    winMessageEl.textContent = "Hero Mode activated for 10 seconds!";
+    stopHeroMode();
+    heroModeTimer = setTimeout(() => {
+        heroMode = false;
+        multiplier = 1;
+        multiplierEl.textContent = "x1";
+        heroBtn.disabled = false;
+        heroBtn.textContent = "Hero Mode";
+        if (!stageModalEl.classList.contains("hidden")) return;
+        winMessageEl.textContent = "";
+    }, 10000);
+}
+
+function stopHeroMode() {
+    if (heroModeTimer) {
+        clearTimeout(heroModeTimer);
+        heroModeTimer = null;
+    }
 }
 
 function shuffleUnmatchedCards() {

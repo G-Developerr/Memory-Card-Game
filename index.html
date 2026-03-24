@@ -15,6 +15,10 @@
 
 <body>
     <div class="marvel-wallpaper" aria-hidden="true"></div>
+    <div class="marvel-logo-3d" aria-hidden="true">
+        <span class="logo-face logo-front">MARVEL</span>
+        <span class="logo-face logo-back">MARVEL</span>
+    </div>
     <div class="app-shell">
         <header class="app-header">
             <h1>Marvel Memory Cards</h1>
@@ -29,6 +33,8 @@
             <p>Pairs <span class="score">0</span>/<span class="total-pairs">0</span></p>
             <p>Streak <span class="streak">0</span></p>
             <p>Points <span class="points">0</span></p>
+            <p>Lives <span class="lives">3</span></p>
+            <p>Multiplier <span class="multiplier">x1</span></p>
             <p>Rewards <span class="rewards-count">0</span></p>
             <p>Best <span class="best-score">-</span></p>
         </div>
@@ -47,6 +53,7 @@
             </select>
             <button onclick="restart()">Restart</button>
             <button onclick="useHint()" class="hint-btn">Hint</button>
+            <button onclick="activateHeroMode()" class="hero-btn">Hero Mode</button>
             <button onclick="togglePause()" class="pause-btn">Pause</button>
         </div>
 

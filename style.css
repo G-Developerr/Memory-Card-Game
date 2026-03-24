@@ -31,6 +31,45 @@ body {
     z-index: 0;
 }
 
+.marvel-logo-3d {
+    position: fixed;
+    top: 2vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(92vw, 1000px);
+    height: 170px;
+    pointer-events: none;
+    perspective: 900px;
+    z-index: 0;
+}
+
+.logo-face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Orbitron", sans-serif;
+    font-size: clamp(56px, 11vw, 160px);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    transform-style: preserve-3d;
+    text-shadow: 0 10px 22px rgba(0, 0, 0, 0.55);
+    animation: marvel-logo-3d-spin 10s ease-in-out infinite;
+}
+
+.logo-front {
+    color: rgba(249, 65, 68, 0.22);
+    -webkit-text-stroke: 2px rgba(255, 209, 102, 0.25);
+    transform: translateZ(50px) rotateY(0deg);
+}
+
+.logo-back {
+    color: rgba(255, 209, 102, 0.18);
+    -webkit-text-stroke: 2px rgba(249, 65, 68, 0.22);
+    transform: translateZ(-50px) rotateY(180deg);
+}
+
 .marvel-wallpaper::before {
     content: "MARVEL";
     position: absolute;
@@ -58,7 +97,7 @@ body {
 
 .app-shell {
     width: min(1120px, 95%);
-    margin: 20px auto;
+    margin: clamp(120px, 18vh, 170px) auto 20px;
     background: rgba(7, 11, 25, 0.72);
     border: 1px solid rgba(255, 209, 102, 0.28);
     border-radius: 20px;
@@ -182,6 +221,10 @@ h1 {
 
 .actions button.hint-btn {
     background: linear-gradient(120deg, #ffd166, #f3722c);
+}
+
+.actions button.hero-btn {
+    background: linear-gradient(120deg, #355c9a, #7a5cff);
 }
 
 .actions button:disabled {
@@ -341,10 +384,23 @@ h1 {
     }
 }
 
+@keyframes marvel-logo-3d-spin {
+    0% {
+        transform: rotateX(18deg) rotateY(-18deg);
+    }
+    50% {
+        transform: rotateX(-16deg) rotateY(20deg);
+    }
+    100% {
+        transform: rotateX(18deg) rotateY(-18deg);
+    }
+}
+
 @media (max-width: 768px) {
     .app-shell {
         width: 97%;
         padding: 14px;
+        margin-top: 100px;
     }
 
     .hud p {
@@ -359,5 +415,10 @@ h1 {
     .card {
         width: min(120px, 28vw);
         height: calc(120px / 2 * 3);
+    }
+
+    .marvel-logo-3d {
+        height: 118px;
+        top: 1vh;
     }
 }
