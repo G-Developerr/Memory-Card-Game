@@ -18,7 +18,7 @@ body {
     font-family: "Poppins", Arial, Helvetica, sans-serif;
     background:
         linear-gradient(rgba(10, 12, 28, 0.5), rgba(10, 12, 28, 0.75)),
-        url("./assets/Captain-America.png") center/cover no-repeat fixed,
+        url("./assets/marvel-bg-main.png") center/cover no-repeat fixed,
         linear-gradient(160deg, var(--bg1), var(--bg2));
     animation: marvel-pan 18s ease-in-out infinite alternate;
     overflow-x: hidden;
@@ -293,7 +293,7 @@ h1 {
 .card .back {
     background:
         linear-gradient(rgba(16, 22, 50, 0.35), rgba(16, 22, 50, 0.55)),
-        url("./assets/avengers-character-thor.png") center/cover no-repeat;
+        url("./assets/marvel-cardback.png") center/cover no-repeat;
     overflow: hidden;
 }
 
