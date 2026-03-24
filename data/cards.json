@@ -1,0 +1,37 @@
+[{
+        "image": "../assets/avengers-character-thor.png",
+        "name": "avengers-character-thor"
+    },
+    {
+        "image": "../assets/black-window.png",
+        "name": "black-window"
+    },
+    {
+        "image": "../assets/Captain-America.png",
+        "name": "Captain-America"
+    },
+    {
+        "image": "../assets/Doctor-strange.png",
+        "name": "Doctor-strange"
+    },
+    {
+        "image": "../assets/hulk-poster.png",
+        "name": "hulk-poster"
+    },
+    {
+        "image": "../assets/scarlet.png",
+        "name": "scarlet"
+    },
+    {
+        "image": "../assets/spiderman.png",
+        "name": "spiderman"
+    },
+    {
+        "image": "../assets/venom.png",
+        "name": "venom"
+    },
+    {
+        "image": "../assets/wolverine.png",
+        "name": "wolverine"
+    }
+]
