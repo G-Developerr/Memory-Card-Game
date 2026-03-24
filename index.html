@@ -26,6 +26,7 @@
             <p>Moves <span class="moves">0</span></p>
             <p>Pairs <span class="score">0</span>/<span class="total-pairs">0</span></p>
             <p>Streak <span class="streak">0</span></p>
+            <p>Points <span class="points">0</span></p>
             <p>Best <span class="best-score">-</span></p>
         </div>
 
@@ -39,8 +40,10 @@
                 <option value="easy" selected>Easy (6 pairs)</option>
                 <option value="medium">Medium (8 pairs)</option>
                 <option value="hard">Hard (9 pairs)</option>
+                <option value="legendary">Legendary (9 pairs + chaos)</option>
             </select>
             <button onclick="restart()">Restart</button>
+            <button onclick="useHint()" class="hint-btn">Hint</button>
             <button onclick="togglePause()" class="pause-btn">Pause</button>
         </div>
 

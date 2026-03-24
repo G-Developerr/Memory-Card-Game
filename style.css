@@ -16,9 +16,11 @@ body {
     margin: 0;
     color: #f4f6ff;
     font-family: "Poppins", Arial, Helvetica, sans-serif;
-    background: radial-gradient(circle at 15% 15%, #8f1d24, transparent 40%),
-        radial-gradient(circle at 85% 10%, #1f3f75, transparent 38%),
+    background:
+        linear-gradient(rgba(10, 12, 28, 0.6), rgba(10, 12, 28, 0.7)),
+        url("./assets/Doctor-strange.png") center/cover no-repeat fixed,
         linear-gradient(160deg, var(--bg1), var(--bg2));
+    animation: marvel-pan 18s ease-in-out infinite alternate;
 }
 
 .app-shell {
@@ -30,6 +32,21 @@ body {
     padding: 18px 18px 24px;
     backdrop-filter: blur(6px);
     box-shadow: 0 15px 45px rgba(2, 6, 20, 0.45);
+}
+
+@keyframes marvel-pan {
+    0% {
+        background-position: center, center, center;
+        filter: saturate(1);
+    }
+    50% {
+        background-position: center, 45% 45%, center;
+        filter: saturate(1.1);
+    }
+    100% {
+        background-position: center, 55% 55%, center;
+        filter: saturate(1);
+    }
 }
 
 .app-header {
@@ -128,6 +145,10 @@ h1 {
     background: linear-gradient(120deg, #355c9a, #1f3f75);
 }
 
+.actions button.hint-btn {
+    background: linear-gradient(120deg, #ffd166, #f3722c);
+}
+
 .grid-container {
     display: grid;
     justify-content: center;
@@ -150,6 +171,7 @@ h1 {
     transition: transform 0.55s ease, box-shadow 0.25s ease;
     box-shadow: 0 10px 18px rgba(0, 0, 0, 0.45);
     border: 1px solid rgba(255, 209, 102, 0.45);
+    perspective: 900px;
 }
 
 .card:hover {
@@ -187,18 +209,36 @@ h1 {
 
 .card .back {
     background:
-        linear-gradient(135deg, rgba(249, 65, 68, 0.42), rgba(255, 209, 102, 0.34)),
-        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18), transparent 35%),
-        #101a3c;
+        linear-gradient(rgba(16, 22, 50, 0.35), rgba(16, 22, 50, 0.55)),
+        url("./assets/avengers-character-thor.png") center/cover no-repeat;
+    overflow: hidden;
 }
 
 .card .back::before {
     content: "";
     position: absolute;
     inset: 8px;
-    border: 1px solid rgba(255, 209, 102, 0.45);
+    border: 1px solid rgba(255, 209, 102, 0.65);
     border-radius: 10px;
     pointer-events: none;
+}
+
+.card .back::after {
+    content: "";
+    position: absolute;
+    inset: -40% -60%;
+    background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.35), transparent 70%);
+    transform: translateX(-60%) rotate(12deg);
+    animation: shine-sweep 3.5s linear infinite;
+}
+
+@keyframes shine-sweep {
+    0% {
+        transform: translateX(-60%) rotate(12deg);
+    }
+    100% {
+        transform: translateX(60%) rotate(12deg);
+    }
 }
 
 .win-message {

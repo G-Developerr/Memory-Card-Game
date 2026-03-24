@@ -1,0 +1,5 @@
+staticSites:
+  - name: memory-card-game
+    branch: main
+    buildCommand: ""
+    staticPublishPath: .
